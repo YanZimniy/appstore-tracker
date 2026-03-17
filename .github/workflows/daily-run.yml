@@ -3,29 +3,36 @@ name: Daily AppStore Tracking
 on:
   schedule:
     - cron: '0 10 * * *'  # каждый день в 10:00 UTC
-  workflow_dispatch:  # позволяет запускать вручную
+  workflow_dispatch:      # возможность запускать вручную
 
 jobs:
   fetch-apps:
     runs-on: ubuntu-latest
 
     steps:
+      # Получаем код проекта
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      # Устанавливаем Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
+      # Устанавливаем зависимости проекта (если есть requirements.txt)
       - name: Install dependencies
-        run: pip install requests
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run main.py
+      # Запускаем скрипт
+      - name: Run script
         run: python main.py
 
+      # Загружаем результат (например apps.json)
       - name: Upload apps file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: apps-json
           path: apps_*.json
