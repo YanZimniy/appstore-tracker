@@ -1,0 +1,28 @@
+name: Daily AppStore Tracker
+
+on:
+  schedule:
+    - cron: "0 10 * * *" # Запуск каждый день в 10:00 UTC
+  workflow_dispatch: # Позволяет запускать вручную
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.14'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests psycopg2-binary python-telegram-bot
+
+    - name: Run main.py
+      run: |
+        python main.py
