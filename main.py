@@ -1,35 +1,36 @@
-# fetch_apps.py
 import requests
+import time
 import json
-from datetime import datetime
 
-# RSS URL Apple
-APPLE_RSS = "https://rss.apple.com/api/v1/us/ios-apps/top-free/all/200/explicit.json"
+def get_top_apps(retries=3, delay=5):
+    url = "https://api.rss2json.com/v1/api.json?rss_url=https://rss.apple.com/api/v1/us/ios-apps/top-free/all/200/explicit.json"
+    
+    for attempt in range(1, retries+1):
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+            print("Apps fetched successfully")
+            return response.json()
+        except requests.exceptions.HTTPError as e:
+            print(f"Attempt {attempt} failed: {e}")
+            if attempt < retries:
+                print(f"Retrying in {delay} seconds...")
+                time.sleep(delay)
+            else:
+                print("All attempts failed. Returning None.")
+                return None
+        except requests.exceptions.RequestException as e:
+            print(f"Network error: {e}")
+            return None
 
-# Прокси rss2json (заменяет Apple RSS)
-PROXY_URL = f"https://api.rss2json.com/v1/api.json?rss_url={APPLE_RSS}"
-
-def get_top_apps():
-    response = requests.get(PROXY_URL)
-    response.raise_for_status()
-    data = response.json()
-    apps = []
-
-    for item in data.get("items", []):
-        apps.append({
-            "name": item.get("title"),
-            "id": item.get("guid"),
-            "link": item.get("link"),
-        })
-    return apps
-
-def save_to_file(apps):
-    today = datetime.now().strftime("%Y-%m-%d")
-    filename = f"top_apps_{today}.json"
+def save_report(data, filename="report.json"):
+    if data is None:
+        print("No data to save.")
+        return
     with open(filename, "w", encoding="utf-8") as f:
-        json.dump(apps, f, indent=2, ensure_ascii=False)
-    print(f"Saved {len(apps)} apps to {filename}")
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    print(f"Report saved to {filename}")
 
 if __name__ == "__main__":
     apps = get_top_apps()
-    save_to_file(apps)
+    save_report(apps)
