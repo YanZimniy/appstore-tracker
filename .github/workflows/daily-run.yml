@@ -1,5 +1,8 @@
 name: Fetch Top Apps Daily
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   schedule:
     - cron: '0 12 * * *'  # Каждый день в 12:00 UTC
