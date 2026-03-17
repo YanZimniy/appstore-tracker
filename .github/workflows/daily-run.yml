@@ -1,38 +1,36 @@
-name: Fetch Top Apps Daily
+import requests
+import json
+from datetime import datetime
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+URL = "https://itunes.apple.com/search?term=app&country=us&entity=software&limit=200"
 
-on:
-  schedule:
-    - cron: '0 12 * * *'  # Каждый день в 12:00 UTC
-  workflow_dispatch:
+def get_top_apps():
+    r = requests.get(URL)
+    r.raise_for_status()
+    data = r.json()
 
-jobs:
-  fetch-apps:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+    apps = []
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
+    for app in data["results"]:
+        apps.append({
+            "id": app.get("trackId"),
+            "name": app.get("trackName"),
+            "developer": app.get("sellerName"),
+            "rating": app.get("averageUserRating")
+        })
 
-      - name: Install requests
-        run: pip install requests
+    return apps
 
-      - name: Fetch top apps
-        run: python main.py
 
-      - name: Commit and push results
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add top_apps_*.json
-          git commit -m "Update top apps JSON"
-          git push
-        env:
-          # Используй токен GitHub с правами workflow
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+def save(apps):
+    filename = f"apps_{datetime.now().date()}.json"
+
+    with open(filename, "w", encoding="utf8") as f:
+        json.dump(apps, f, indent=2, ensure_ascii=False)
+
+    print("Saved", filename)
+
+
+if __name__ == "__main__":
+    apps = get_top_apps()
+    save(apps)
