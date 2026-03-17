@@ -24,7 +24,7 @@ jobs:
         run: pip install requests
 
       - name: Fetch top apps
-        run: python fetch_apps.py
+        run: python main.py
 
       - name: Commit and push results
         run: |
