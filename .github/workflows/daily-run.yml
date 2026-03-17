@@ -22,11 +22,14 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run AppStore fetch script
-        id: run-app        # ← добавили id
-        run: python main.py
+        id: run-app
+        run: |
+          python main.py
+          echo "Checking that report.json exists:"
+          ls -l report.json
 
       - name: Upload report
-        if: success()       # теперь просто проверяем успешное выполнение
+        if: success()       # шаг выполнится только если main.py прошёл успешно
         uses: actions/upload-artifact@v4
         with:
           name: appstore-report
